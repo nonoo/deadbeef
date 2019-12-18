@@ -263,9 +263,11 @@ w_free (void) {
     }
     w_creators = NULL;
 
-    w_remove (NULL, rootwidget);
-    w_destroy (rootwidget);
-    rootwidget = NULL;
+    if (rootwidget != NULL) {
+        w_remove (NULL, rootwidget);
+        w_destroy (rootwidget);
+        rootwidget = NULL;
+    }
 }
 
 ddb_gtkui_widget_t *
@@ -665,6 +667,8 @@ save_widget_to_string (char *str, int sz, ddb_gtkui_widget_t *w) {
 
 void
 w_save (void) {
+    if (rootwidget == NULL) return;
+    
     char buf[20000] = "";
     save_widget_to_string (buf, sizeof (buf), rootwidget->children);
     deadbeef->conf_set_str (DDB_GTKUI_CONF_LAYOUT, buf);
@@ -3162,7 +3166,7 @@ static gboolean
 spectrum_draw (GtkWidget *widget, cairo_t *cr, gpointer user_data) {
     w_spectrum_t *w = user_data;
 
-    int playback_status = deadbeef->get_output ()->state ();
+    ddb_playback_state_t playback_state = deadbeef->get_output ()->state ();
 
     float *freq = w->data;
 
@@ -3323,9 +3327,9 @@ w_spectrum_init (ddb_gtkui_widget_t *w) {
         return;
     }
 #endif
-    int playback_status = deadbeef->get_output ()->state ();
+    ddb_playback_state_t playback_state = deadbeef->get_output ()->state ();
 
-    if (playback_status == OUTPUT_STATE_PLAYING) { 
+    if (playback_state == DDB_PLAYBACK_STATE_PLAYING) { 
         _spectrum_run (w);
     }
 }
@@ -4082,7 +4086,7 @@ seekbar_frameupdate (gpointer data) {
     DB_playItem_t *track = deadbeef->streamer_get_playing_track ();
     float songpos = w->last_songpos;
     float duration = track ? deadbeef->pl_get_item_duration (track) : -1;
-    if (!output || (output->state () == OUTPUT_STATE_STOPPED || !track)) {
+    if (!output || (output->state () == DDB_PLAYBACK_STATE_STOPPED || !track)) {
         songpos = 0;
     }
     else {

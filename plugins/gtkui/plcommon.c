@@ -167,17 +167,11 @@ create_col_info (DdbListview *listview, int id) {
     return info;
 }
 
-static gboolean
-coverart_release_cb (void *user_data) {
+static void
+coverart_release (void *user_data) {
     col_info_t *info = user_data;
     g_object_unref(info->listview->list);
     free(user_data);
-    return FALSE;
-}
-
-static void
-coverart_release (void *user_data) {
-    g_idle_add(coverart_release_cb, user_data);
 }
 
 void
@@ -466,7 +460,7 @@ pl_common_draw_column_data (DdbListview *listview, cairo_t *cr, DdbListviewIter 
     DB_playItem_t *playing_track = deadbeef->streamer_get_playing_track ();
 
     if (!gtkui_unicode_playstate && it && it == playing_track && info->id == DB_COLUMN_PLAYING) {
-        int paused = deadbeef->get_output ()->state () == OUTPUT_STATE_PAUSED;
+        int paused = deadbeef->get_output ()->state () == DDB_PLAYBACK_STATE_PAUSED;
         int buffering = !deadbeef->streamer_ok_to_read (-1);
         GdkPixbuf *pixbuf;
         if (paused) {
@@ -489,7 +483,7 @@ pl_common_draw_column_data (DdbListview *listview, cairo_t *cr, DdbListviewIter 
         char text[1024] = "";
         int is_dimmed = 0;
         if (it == playing_track && info->id == DB_COLUMN_PLAYING) {
-            int paused = deadbeef->get_output ()->state () == OUTPUT_STATE_PAUSED;
+            int paused = deadbeef->get_output ()->state () == DDB_PLAYBACK_STATE_PAUSED;
             int buffering = !deadbeef->streamer_ok_to_read (-1);
             if (paused) {
                 strcpy (text, "||");
@@ -1553,9 +1547,9 @@ on_group_by_custom_activate            (GtkMenuItem     *menuitem,
     DdbListviewGroupFormat *fmt = listview->group_formats;
     while (fmt) {
         if (format[0] != 0) {
-            strncat(format, SUBGROUP_DELIMITER, sizeof(format));
+            strncat(format, SUBGROUP_DELIMITER, sizeof(format) - 1);
         }
-        strncat(format, fmt->format, sizeof(format));
+        strncat(format, fmt->format, sizeof(format) - 1);
         fmt = fmt->next;
     }
     gtk_entry_set_text (GTK_ENTRY (entry), format);

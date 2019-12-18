@@ -105,7 +105,7 @@ read_gzfile (const char *fname, char **buffer, int *size) {
             // and mkstemp is considered insecure,
             // so just make the name manually.
             // This is as insecure as mkstemp, but (hopefully) won't be bugged by static analyzers
-            snprintf (tmpnm, sizeof (tmpnm), "%s/ddbgme%03d.vgz", tmp);
+            snprintf (tmpnm, sizeof (tmpnm), "%s/ddbgme%03d.vgz", tmp, idx);
             fd = open (tmpnm, O_RDWR|O_CREAT|O_TRUNC);
 #else
             snprintf (tmpnm, sizeof (tmpnm), "%s/ddbgmeXXXXXX.vgz", tmp);
@@ -481,7 +481,7 @@ static int
 cgme_start (void) {
     conf_fadeout = deadbeef->conf_get_int ("gme.fadeout", 10);
     conf_loopcount = deadbeef->conf_get_int ("gme.loopcount", 2);
-    conf_play_forever = deadbeef->conf_get_int ("playback.loop", PLAYBACK_MODE_LOOP_ALL) == PLAYBACK_MODE_LOOP_SINGLE;
+    conf_play_forever = deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE;
     return 0;
 }
 
@@ -538,7 +538,7 @@ cgme_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     case DB_EV_CONFIGCHANGED:
         conf_fadeout = deadbeef->conf_get_int ("gme.fadeout", 10);
         conf_loopcount = deadbeef->conf_get_int ("gme.loopcount", 2);
-        conf_play_forever = deadbeef->conf_get_int ("playback.loop", PLAYBACK_MODE_LOOP_ALL) == PLAYBACK_MODE_LOOP_SINGLE;
+        conf_play_forever = deadbeef->streamer_get_repeat () == DDB_REPEAT_SINGLE;
         if (chip_voices != deadbeef->conf_get_int ("chip.voices", 0xff)) {
             chip_voices_changed = 1;
         }
